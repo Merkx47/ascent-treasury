@@ -16,7 +16,7 @@ import {
   FileText,
   ArrowRight,
 } from "lucide-react";
-import unionBankLogo from "@assets/Union_Bank_Nigeria_Logo_1768417094208.png";
+import unionBankLogo from "@assets/image_1768418399016.png";
 
 const quickAccessItems = [
   { icon: FileText, label: "Trade Finance", description: "Form M, LC, BFC" },
@@ -51,7 +51,7 @@ export default function Login() {
       <div className="flex-1 flex flex-col justify-center px-8 lg:px-16 py-12 bg-background animate-in fade-in slide-in-from-left-4 duration-500">
         <div className="w-full max-w-md mx-auto">
           <div className="flex items-center gap-4 mb-10">
-            <div className="w-16 h-16 rounded-xl bg-white border-2 border-border p-2 flex items-center justify-center shadow-sm">
+            <div className="w-16 h-16 rounded-xl bg-primary border-2 border-primary p-2 flex items-center justify-center shadow-sm">
               <img
                 src={unionBankLogo}
                 alt="Union Bank"

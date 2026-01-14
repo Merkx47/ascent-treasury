@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { AnimatedStatsCard } from "@/components/AnimatedStatsCard";
 import { TransactionTrendChart } from "@/components/TransactionTrendChart";
-import { BudgetDonut } from "@/components/BudgetDonut";
 import { LiveFxRates } from "@/components/LiveFxRates";
 import { TransactionTable } from "@/components/TransactionTable";
 import { TransactionModal } from "@/components/TransactionModal";
@@ -16,15 +15,13 @@ import {
 import {
   FileText,
   Clock,
-  TrendingUp,
-  Landmark,
+  AlertTriangle,
+  CheckCircle,
   Calendar,
 } from "lucide-react";
 import { mockTransactions } from "@/lib/mockData";
 import {
   unifiedDashboardStats,
-  unifiedBudgetUtilization,
-  previousBudgetUtilization,
   unifiedActiveResources,
   previousActiveResources,
 } from "@/lib/dashboardAggregation";
@@ -61,34 +58,31 @@ export default function Dashboard() {
       description: "vs previous period",
     },
     {
-      title: "Budget Utilization",
-      value: unifiedBudgetUtilization,
-      previousValue: previousBudgetUtilization,
-      icon: TrendingUp,
-      iconBgColor: "bg-emerald-100 dark:bg-emerald-900/30",
-      iconColor: "text-emerald-600 dark:text-emerald-400",
-      format: "percentage" as const,
-      description: `₦${(unifiedDashboardStats.spent / 1000000000).toFixed(1)}B of ₦${(unifiedDashboardStats.budget / 1000000000).toFixed(1)}B`,
-    },
-    {
-      title: "Active Resources",
-      value: unifiedActiveResources,
-      previousValue: previousActiveResources,
+      title: "Pending Approvals",
+      value: unifiedDashboardStats.pendingApprovals,
+      previousValue: unifiedDashboardStats.previousPending,
       icon: Clock,
       iconBgColor: "bg-amber-100 dark:bg-amber-900/30",
       iconColor: "text-amber-600 dark:text-amber-400",
-      description: "pending + in progress",
+      description: "awaiting review",
     },
     {
-      title: "Potential Savings",
-      value: unifiedDashboardStats.potentialSavings,
-      previousValue: unifiedDashboardStats.previousSavings,
-      icon: Landmark,
-      iconBgColor: "bg-green-100 dark:bg-green-900/30",
-      iconColor: "text-green-600 dark:text-green-400",
-      format: "currency" as const,
-      currency: "NGN",
-      description: `${unifiedDashboardStats.totalTransactions} opportunities`,
+      title: "Active Processing",
+      value: unifiedActiveResources,
+      previousValue: previousActiveResources,
+      icon: CheckCircle,
+      iconBgColor: "bg-emerald-100 dark:bg-emerald-900/30",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
+      description: "in progress today",
+    },
+    {
+      title: "Exceptions",
+      value: unifiedDashboardStats.exceptions,
+      previousValue: unifiedDashboardStats.previousExceptions,
+      icon: AlertTriangle,
+      iconBgColor: "bg-red-100 dark:bg-red-900/30",
+      iconColor: "text-red-600 dark:text-red-400",
+      description: "requires attention",
     },
   ];
 
@@ -103,7 +97,7 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="secondary" className="border-2 border-border px-3 py-1.5">
-            30D Spend: <span className="font-bold text-primary ml-1">₦{(unifiedDashboardStats.spent / 1000000000).toFixed(1)}B</span>
+            30D Volume: <span className="font-bold text-primary ml-1">₦{(unifiedDashboardStats.spent / 1000000000).toFixed(1)}B</span>
             <span className="text-green-600 ml-1.5 text-xs">+{((unifiedDashboardStats.spent - unifiedDashboardStats.previousSpent) / unifiedDashboardStats.previousSpent * 100).toFixed(1)}%</span>
           </Badge>
           <Select value={dateRange} onValueChange={setDateRange}>
@@ -135,25 +129,16 @@ export default function Dashboard() {
           <TransactionTrendChart />
         </div>
         <div>
-          <BudgetDonut
-            spent={unifiedDashboardStats.spent}
-            budget={unifiedDashboardStats.budget}
-            title="Budget Status"
-          />
+          <LiveFxRates />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <LiveFxRates />
-        <div className="lg:col-span-2">
-          <TransactionTable
-            transactions={recentTransactions}
-            title="Recent Transactions"
-            onView={handleView}
-            onEdit={handleEdit}
-          />
-        </div>
-      </div>
+      <TransactionTable
+        transactions={recentTransactions}
+        title="Recent Transactions"
+        onView={handleView}
+        onEdit={handleEdit}
+      />
 
       <TransactionModal
         transaction={selectedTx}
