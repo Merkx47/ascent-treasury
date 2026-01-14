@@ -30,8 +30,10 @@ import {
   FileWarning,
   Eye,
   ArrowUpDown,
+  Download,
 } from "lucide-react";
 import { format, subDays } from "date-fns";
+import { exportToExcel, formatComplianceIssueForExport } from "@/lib/exportUtils";
 
 interface ComplianceItem {
   id: string;
@@ -243,6 +245,29 @@ export default function Compliance() {
                   <SelectItem value="escalated">Escalated</SelectItem>
                 </SelectContent>
               </Select>
+              <Button 
+                variant="outline" 
+                className="border-2"
+                onClick={() => {
+                  const exportData = filteredItems.map(item => formatComplianceIssueForExport({
+                    id: item.id,
+                    referenceNumber: item.reference,
+                    issueType: item.type,
+                    severity: item.severity,
+                    status: item.status,
+                    description: item.issue,
+                    affectedTransaction: item.customer,
+                    reportedBy: item.assignedTo,
+                    reportedDate: format(item.createdAt, "yyyy-MM-dd"),
+                    resolvedDate: item.status === "resolved" ? format(item.dueDate, "yyyy-MM-dd") : "",
+                  }));
+                  exportToExcel(exportData, "Compliance_Issues_Export");
+                }}
+                data-testid="button-download-xlsx"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </Button>
             </div>
           </div>
         </CardHeader>

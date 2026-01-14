@@ -35,6 +35,7 @@ import {
 import type { Transaction } from "@shared/schema";
 import { mockCustomers } from "@/lib/mockData";
 import { format } from "date-fns";
+import { exportToExcel, formatTransactionForExport } from "@/lib/exportUtils";
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -194,6 +195,21 @@ export function TransactionTable({
                   <SelectItem value="exception">Exception</SelectItem>
                 </SelectContent>
               </Select>
+              <Button 
+                variant="outline" 
+                className="border-2"
+                onClick={() => {
+                  const exportData = filteredTransactions.map(tx => formatTransactionForExport({
+                    ...tx,
+                    amount: parseFloat(tx.amount || "0"),
+                  }));
+                  exportToExcel(exportData, `${title.replace(/\s+/g, "_")}_Export`);
+                }}
+                data-testid="button-download-xlsx"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </Button>
               {onCreate && (
                 <Button onClick={onCreate} data-testid="button-create-new">
                   <Plus className="w-4 h-4 mr-2" />

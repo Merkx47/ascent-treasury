@@ -31,7 +31,9 @@ import {
   Filter,
   ChevronLeft,
   ChevronRight,
+  Download,
 } from "lucide-react";
+import { exportToExcel, formatFxTradeForExport } from "@/lib/exportUtils";
 
 const fxRates = [
   { pair: "USD/NGN", bid: 1578.50, ask: 1582.50, change: 0.15 },
@@ -187,6 +189,32 @@ export default function FxTrading() {
                       <SelectItem value="settled">Settled</SelectItem>
                     </SelectContent>
                   </Select>
+                  <Button 
+                    variant="outline" 
+                    className="border-2"
+                    onClick={() => {
+                      const exportData = filteredTrades.map(trade => formatFxTradeForExport({
+                        id: trade.id,
+                        dealNumber: trade.tradeReference,
+                        tradeType: trade.tradeType,
+                        buyCurrency: trade.buyCurrency,
+                        sellCurrency: trade.sellCurrency,
+                        buyAmount: parseFloat(trade.buyAmount),
+                        sellAmount: parseFloat(trade.sellAmount),
+                        rate: parseFloat(trade.allInRate),
+                        customer: trade.counterparty,
+                        status: trade.settlementStatus,
+                        tradeDate: trade.valueDate.toISOString().split("T")[0],
+                        valueDate: trade.valueDate.toISOString().split("T")[0],
+                        trader: trade.dealerName,
+                      }));
+                      exportToExcel(exportData, "FX_Trades_Export");
+                    }}
+                    data-testid="button-download-xlsx"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export
+                  </Button>
                 </div>
               </div>
             </CardHeader>

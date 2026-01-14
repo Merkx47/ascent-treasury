@@ -40,7 +40,9 @@ import {
   Filter,
   ChevronLeft,
   ChevronRight,
+  Download,
 } from "lucide-react";
+import { exportToExcel, formatCustomerForExport } from "@/lib/exportUtils";
 
 export default function Customers() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -149,6 +151,20 @@ export default function Customers() {
                   <SelectItem value="new">New (&lt;2 txns)</SelectItem>
                 </SelectContent>
               </Select>
+              <Button 
+                variant="outline" 
+                className="border-2"
+                onClick={() => {
+                  const exportData = filteredCustomers.map(customer => 
+                    formatCustomerForExport(customer, customerTransactionCounts[customer.id])
+                  );
+                  exportToExcel(exportData, "Customers_Export");
+                }}
+                data-testid="button-download-xlsx"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </Button>
             </div>
           </div>
         </CardHeader>
