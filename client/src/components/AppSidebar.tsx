@@ -35,23 +35,13 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r-2 border-sidebar-border">
-      <SidebarHeader className="p-4 border-b-2 border-sidebar-border">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary p-1.5">
-            <img 
-              src={unionBankLogo} 
-              alt="Union Bank" 
-              className="w-full h-full object-contain"
-            />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-lg font-bold text-sidebar-foreground tracking-tight">
-              Ascent Trade
-            </span>
-            <span className="text-[10px] text-sidebar-foreground/70 uppercase tracking-wider">
-              Union Bank Nigeria
-            </span>
-          </div>
+      <SidebarHeader className="p-4 border-b-2 border-sidebar-border bg-primary">
+        <Link href="/" className="flex items-center justify-center">
+          <img 
+            src={unionBankLogo} 
+            alt="Union Bank" 
+            className="h-10 w-auto object-contain"
+          />
         </Link>
       </SidebarHeader>
 

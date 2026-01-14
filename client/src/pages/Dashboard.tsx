@@ -45,7 +45,7 @@ export default function Dashboard() {
     setIsModalOpen(true);
   };
 
-  const recentTransactions = mockTransactions.slice(0, 15);
+  const recentTransactions = mockTransactions.slice(0, 10);
 
   const statsCards = [
     {

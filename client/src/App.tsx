@@ -6,7 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
-import { LanguageProvider, LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { LanguageProvider } from "@/components/LanguageSwitcher";
+import { GoogleTranslate } from "@/components/GoogleTranslate";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Badge } from "@/components/ui/badge";
@@ -43,7 +44,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
               </Badge>
             </div>
             <div className="flex items-center gap-3">
-              <LanguageSwitcher />
+              <GoogleTranslate />
               <Button variant="outline" size="icon" className="border-2 relative" data-testid="button-notifications">
                 <Bell className="w-4 h-4" />
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold">

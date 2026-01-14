@@ -51,11 +51,11 @@ export default function Login() {
       <div className="flex-1 flex flex-col justify-center px-8 lg:px-16 py-12 bg-background animate-in fade-in slide-in-from-left-4 duration-500">
         <div className="w-full max-w-md mx-auto">
           <div className="flex items-center gap-4 mb-10">
-            <div className="w-16 h-16 rounded-xl bg-primary border-2 border-primary p-2 flex items-center justify-center shadow-sm">
+            <div className="bg-primary rounded-xl p-3">
               <img
                 src={unionBankLogo}
                 alt="Union Bank"
-                className="w-full h-full object-contain"
+                className="h-12 w-auto object-contain"
               />
             </div>
             <div>

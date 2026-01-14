@@ -54,7 +54,7 @@ export function LiveFxRates() {
   }, []);
 
   return (
-    <Card className="border-2 border-border h-full">
+    <Card className="border-2 border-border">
       <CardHeader className="pb-3 border-b-2 border-border">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
