@@ -25,6 +25,7 @@ import {
 import { navigationGroups } from "@/lib/constants";
 import { useAuth } from "@/hooks/use-auth";
 import { getInitials } from "@/lib/utils";
+import unionBankLogo from "@assets/Union_Bank_Nigeria_Logo_1768417094208.png";
 
 export function AppSidebar() {
   const [location] = useLocation();
@@ -33,22 +34,22 @@ export function AppSidebar() {
   const userName = user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email || "User" : "User";
 
   return (
-    <Sidebar className="border-r border-sidebar-border">
-      <SidebarHeader className="p-4 border-b border-sidebar-border">
+    <Sidebar className="border-r-2 border-sidebar-border">
+      <SidebarHeader className="p-4 border-b-2 border-sidebar-border">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary">
+          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-white p-1.5">
             <img 
-              src="/union-bank-logo.png" 
+              src={unionBankLogo} 
               alt="Union Bank" 
-              className="w-8 h-8 object-contain"
+              className="w-full h-full object-contain"
             />
           </div>
           <div className="flex flex-col">
-            <span className="text-lg font-semibold text-sidebar-foreground tracking-tight">
+            <span className="text-lg font-bold text-sidebar-foreground tracking-tight">
               Ascent Trade
             </span>
-            <span className="text-xs text-sidebar-foreground/60">
-              Union Bank
+            <span className="text-[10px] text-sidebar-foreground/70 uppercase tracking-wider">
+              Union Bank Nigeria
             </span>
           </div>
         </Link>
@@ -93,7 +94,7 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-sidebar-border">
+      <SidebarFooter className="p-4 border-t-2 border-sidebar-border">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 

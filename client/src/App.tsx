@@ -6,8 +6,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { LanguageProvider, LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { Badge } from "@/components/ui/badge";
+import { Bell, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
@@ -30,9 +34,27 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen w-full overflow-hidden">
         <AppSidebar />
         <div className="flex flex-col flex-1 overflow-hidden">
-          <header className="flex items-center justify-between h-14 px-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shrink-0">
-            <SidebarTrigger data-testid="button-sidebar-toggle" />
-            <ThemeToggle />
+          <header className="flex items-center justify-between h-14 px-4 border-b-2 border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shrink-0">
+            <div className="flex items-center gap-4">
+              <SidebarTrigger data-testid="button-sidebar-toggle" />
+              <Badge variant="outline" className="border-2 hidden sm:flex">
+                <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
+                System Online
+              </Badge>
+            </div>
+            <div className="flex items-center gap-3">
+              <LanguageSwitcher />
+              <Button variant="outline" size="icon" className="border-2 relative" data-testid="button-notifications">
+                <Bell className="w-4 h-4" />
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold">
+                  5
+                </span>
+              </Button>
+              <Button variant="outline" size="icon" className="border-2" data-testid="button-refresh">
+                <RefreshCw className="w-4 h-4" />
+              </Button>
+              <ThemeToggle />
+            </div>
           </header>
           <main className="flex-1 overflow-y-auto bg-muted/30">
             {children}
@@ -44,8 +66,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 }
 
 function Router() {
-  const { isAuthenticated, login } = useAuth();
-  const [location] = useLocation();
+  const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
     return <Login />;
@@ -110,10 +131,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="ascent-trade-theme">
         <AuthProvider>
-          <TooltipProvider>
-            <Router />
-            <Toaster />
-          </TooltipProvider>
+          <LanguageProvider>
+            <TooltipProvider>
+              <Router />
+              <Toaster />
+            </TooltipProvider>
+          </LanguageProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

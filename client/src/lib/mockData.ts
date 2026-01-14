@@ -409,6 +409,29 @@ export const fxRates = [
   { pair: "JPY/NGN", bid: 10.45, ask: 10.55, change: -0.03, flag: "jp" },
 ];
 
+// Transaction trend chart data (last 30 days with 7-day forecast)
+export const transactionTrendData = [
+  { date: "Dec 16", actual: 58000000, forecast: null },
+  { date: "Dec 19", actual: 62000000, forecast: null },
+  { date: "Dec 22", actual: 55000000, forecast: null },
+  { date: "Dec 25", actual: 48000000, forecast: null },
+  { date: "Dec 28", actual: 72000000, forecast: null },
+  { date: "Dec 31", actual: 68000000, forecast: null },
+  { date: "Jan 3", actual: 75000000, forecast: null },
+  { date: "Jan 5", actual: 58000000, forecast: null },
+  { date: "Jan 7", actual: 65000000, forecast: null },
+  { date: "Jan 9", actual: 78000000, forecast: null },
+  { date: "Jan 11", actual: 72000000, forecast: null },
+  { date: "Jan 14", actual: 85000000, forecast: 85000000 },
+  { date: "Jan 17", actual: null, forecast: 88000000 },
+  { date: "Jan 21", actual: null, forecast: 92000000 },
+];
+
+export const transactionTrendStats = {
+  totalVolume: transactionTrendData.filter(d => d.actual).reduce((sum, d) => sum + (d.actual || 0), 0),
+  dailyAverage: transactionTrendData.filter(d => d.actual).reduce((sum, d) => sum + (d.actual || 0), 0) / transactionTrendData.filter(d => d.actual).length,
+};
+
 // Transaction volume chart data
 export const transactionVolumeData = [
   { month: "Jan", volume: 4200, value: 125000000000 },
