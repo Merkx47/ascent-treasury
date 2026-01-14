@@ -56,10 +56,6 @@ export default function Login() {
               alt="Union Bank"
               className="h-16 w-auto object-contain"
             />
-            <div>
-              <h1 className="text-xl font-bold text-foreground tracking-tight">ASCENT TRADE</h1>
-              <p className="text-xs text-primary font-semibold tracking-wider">Trade Finance Platform</p>
-            </div>
           </div>
 
           <div className="mb-8">

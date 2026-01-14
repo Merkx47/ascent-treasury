@@ -36,16 +36,12 @@ export function AppSidebar() {
   return (
     <Sidebar className="border-r-2 border-sidebar-border">
       <SidebarHeader className="p-4 border-b-2 border-sidebar-border">
-        <Link href="/" className="flex flex-col items-start gap-1">
+        <Link href="/" className="flex items-center justify-start">
           <img 
             src={unionBankLogo} 
             alt="Union Bank" 
             className="h-12 w-auto object-contain"
           />
-          <div className="flex flex-col">
-            <span className="text-sm font-bold text-primary tracking-wide">ASCENT TRADE</span>
-            <span className="text-xs text-muted-foreground">Trade Finance Platform</span>
-          </div>
         </Link>
       </SidebarHeader>
 
