@@ -19,16 +19,16 @@ import {
 import unionBankLogo from "@assets/image_1768419831653.png";
 
 const quickAccessItems = [
-  { icon: FileText, label: "Trade Finance", description: "Form M, LC, BFC" },
-  { icon: BarChart3, label: "Analytics", description: "Reports & Insights" },
-  { icon: Shield, label: "Compliance", description: "Screening & Audit" },
+  { icon: FileText, label: "FX Trading", description: "Spot, Forward, Swap" },
+  { icon: BarChart3, label: "Risk Analytics", description: "VAR & Limits" },
+  { icon: Shield, label: "Portfolio", description: "Positions & P&L" },
 ];
 
 const features = [
-  "CBN-compliant trade processing",
   "Real-time FX trading execution",
-  "Automated sanctions screening",
-  "SWIFT message integration",
+  "Money market & fixed income",
+  "VAR and limit monitoring",
+  "Integrated settlement & accounting",
 ];
 
 export default function Login() {
@@ -38,12 +38,25 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
+    if (!email || !password) {
+      setError("Please enter both email and password");
+      return;
+    }
+
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    login();
+    try {
+      await login(email, password);
+    } catch (err) {
+      setError("Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -60,7 +73,7 @@ export default function Login() {
 
           <div className="mb-8">
             <h2 className="text-2xl font-bold mb-2">Welcome back</h2>
-            <p className="text-muted-foreground">Sign in to access your trade finance dashboard</p>
+            <p className="text-muted-foreground">Sign in to access your treasury dashboard</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -133,7 +146,7 @@ export default function Login() {
               ) : (
                 <>
                   <Lock className="w-4 h-4 mr-2" />
-                  Sign in to Dashboard
+                  Sign in to Treasury
                 </>
               )}
             </Button>
@@ -180,13 +193,13 @@ export default function Login() {
                   <Shield className="w-8 h-8" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">Enterprise Platform</h3>
-                  <p className="text-white/70 text-sm">Trade finance excellence</p>
+                  <h3 className="text-xl font-bold">Treasury Solution</h3>
+                  <p className="text-white/70 text-sm">Trading excellence</p>
                 </div>
               </div>
-              
+
               <p className="text-white/80 mb-6 leading-relaxed">
-                Comprehensive trade finance management with CBN compliance, real-time processing, and intelligent analytics.
+                Comprehensive treasury management with FX trading, money market, fixed income, and real-time risk analytics.
               </p>
               
               <div className="space-y-3">

@@ -15,6 +15,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -25,8 +26,18 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { getInitials, maskAccountNumber } from "@/lib/utils";
-import { mockCustomers, mockTransactions } from "@/lib/mockData";
+import { mockCustomers as initialMockCustomers, mockTransactions, type MockCustomer } from "@/lib/mockData";
 import {
   Users,
   Search,
@@ -41,27 +52,42 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  Copy,
+  Trash2,
 } from "lucide-react";
 import { exportToExcel, formatCustomerForExport } from "@/lib/exportUtils";
+import { CustomerModal } from "@/components/CustomerModal";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Customers() {
+  const { toast } = useToast();
+  const [customers, setCustomers] = useState<MockCustomer[]>(initialMockCustomers);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"view" | "edit" | "create">("view");
+  const [selectedCustomer, setSelectedCustomer] = useState<MockCustomer | null>(null);
+
+  // Delete confirmation dialog
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<MockCustomer | null>(null);
+
   const customerTransactionCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    mockCustomers.forEach((customer, index) => {
+    customers.forEach((customer, index) => {
       const actualCount = mockTransactions.filter((tx) => tx.customerId === customer.id).length;
       counts[customer.id] = actualCount > 0 ? actualCount : ((index % 15) + 1);
     });
     return counts;
-  }, []);
+  }, [customers]);
 
   const filteredCustomers = useMemo(() => {
-    let result = [...mockCustomers];
-    
+    let result = [...customers];
+
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
@@ -83,7 +109,7 @@ export default function Customers() {
     }
 
     return result;
-  }, [searchQuery, statusFilter, customerTransactionCounts]);
+  }, [searchQuery, statusFilter, customerTransactionCounts, customers]);
 
   const paginatedCustomers = useMemo(() => {
     const start = (page - 1) * pageSize;
@@ -91,6 +117,100 @@ export default function Customers() {
   }, [filteredCustomers, page]);
 
   const totalPages = Math.ceil(filteredCustomers.length / pageSize);
+
+  // CRUD Handlers
+  const handleAddCustomer = () => {
+    setSelectedCustomer(null);
+    setModalMode("create");
+    setIsModalOpen(true);
+  };
+
+  const handleViewCustomer = (customer: MockCustomer) => {
+    setSelectedCustomer(customer);
+    setModalMode("view");
+    setIsModalOpen(true);
+  };
+
+  const handleEditCustomer = (customer: MockCustomer) => {
+    setSelectedCustomer(customer);
+    setModalMode("edit");
+    setIsModalOpen(true);
+  };
+
+  const handleDuplicateCustomer = (customer: MockCustomer) => {
+    const duplicatedCustomer: MockCustomer = {
+      ...customer,
+      id: `cust-${Date.now()}`,
+      name: `${customer.name} (Copy)`,
+      email: `copy.${customer.email}`,
+      accountNumber: String(Math.floor(Math.random() * 9000000000) + 1000000000),
+      totalTransactions: 0,
+      totalVolume: 0,
+    };
+    setCustomers([duplicatedCustomer, ...customers]);
+    toast({
+      title: "Customer Duplicated",
+      description: `Successfully created a copy of ${customer.name}`,
+    });
+  };
+
+  const handleDeleteClick = (customer: MockCustomer) => {
+    setCustomerToDelete(customer);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (customerToDelete) {
+      setCustomers(customers.filter((c) => c.id !== customerToDelete.id));
+      toast({
+        title: "Customer Deleted",
+        description: `${customerToDelete.name} has been removed`,
+        variant: "destructive",
+      });
+      setDeleteDialogOpen(false);
+      setCustomerToDelete(null);
+    }
+  };
+
+  const handleSaveCustomer = (customerData: Partial<MockCustomer>) => {
+    if (modalMode === "create") {
+      const newCustomer: MockCustomer = {
+        id: customerData.id || `cust-${Date.now()}`,
+        name: customerData.name || "",
+        email: customerData.email || "",
+        phone: customerData.phone || "",
+        address: customerData.address || "",
+        rcNumber: customerData.rcNumber || "",
+        tin: customerData.tin || "",
+        accountNumber: customerData.accountNumber || String(Math.floor(Math.random() * 9000000000) + 1000000000),
+        accountName: customerData.accountName || customerData.name || "",
+        relationshipManager: customerData.relationshipManager || "",
+        sector: customerData.sector || "",
+        status: customerData.status || "active",
+        totalTransactions: 0,
+        totalVolume: 0,
+        currency: "NGN",
+      };
+      setCustomers([newCustomer, ...customers]);
+      toast({
+        title: "Customer Created",
+        description: `${newCustomer.name} has been added successfully`,
+      });
+    } else if (modalMode === "edit" && selectedCustomer) {
+      setCustomers(
+        customers.map((c) =>
+          c.id === selectedCustomer.id
+            ? { ...c, ...customerData }
+            : c
+        )
+      );
+      toast({
+        title: "Customer Updated",
+        description: `${customerData.name || selectedCustomer.name} has been updated`,
+      });
+    }
+    setIsModalOpen(false);
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -114,11 +234,11 @@ export default function Customers() {
           <div>
             <h1 className="text-2xl font-semibold text-foreground">Customers</h1>
             <p className="text-sm text-muted-foreground">
-              Manage corporate trade customers
+              Manage corporate trade customers ({customers.length} total)
             </p>
           </div>
         </div>
-        <Button data-testid="button-add-customer">
+        <Button onClick={handleAddCustomer} data-testid="button-add-customer">
           <Plus className="w-4 h-4 mr-2" />
           Add Customer
         </Button>
@@ -151,11 +271,11 @@ export default function Customers() {
                   <SelectItem value="new">New (&lt;2 txns)</SelectItem>
                 </SelectContent>
               </Select>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="border-2"
                 onClick={() => {
-                  const exportData = filteredCustomers.map(customer => 
+                  const exportData = filteredCustomers.map(customer =>
                     formatCustomerForExport(customer, customerTransactionCounts[customer.id])
                   );
                   exportToExcel(exportData, "Customers_Export");
@@ -250,17 +370,29 @@ export default function Customers() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleViewCustomer(customer)}>
                               <Eye className="h-4 w-4 mr-2" />
                               View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEditCustomer(customer)}>
                               <Edit className="h-4 w-4 mr-2" />
                               Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDuplicateCustomer(customer)}>
+                              <Copy className="h-4 w-4 mr-2" />
+                              Duplicate
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                               <FileText className="h-4 w-4 mr-2" />
                               View Transactions
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteClick(customer)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -324,6 +456,36 @@ export default function Customers() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Customer Modal */}
+      <CustomerModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        customer={selectedCustomer}
+        mode={modalMode}
+        onSave={handleSaveCustomer}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Customer</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{customerToDelete?.name}</strong>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

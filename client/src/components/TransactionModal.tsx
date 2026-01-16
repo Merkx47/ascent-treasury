@@ -111,7 +111,7 @@ export function TransactionModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl border-2 border-border">
-        <DialogHeader className="border-b border-border pb-4">
+        <DialogHeader className="border-b border-border pb-4 px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -132,7 +132,7 @@ export function TransactionModal({
           </div>
         </DialogHeader>
 
-        <div className="py-4 space-y-6 max-h-[60vh] overflow-y-auto">
+        <div className="px-6 py-4 space-y-6 max-h-[calc(80vh-12rem)] overflow-y-auto">
           {isViewMode && transaction ? (
             <>
               <div className="grid grid-cols-2 gap-4">
@@ -333,7 +333,7 @@ export function TransactionModal({
           )}
         </div>
 
-        <DialogFooter className="border-t border-border pt-4 gap-2">
+        <DialogFooter className="border-t border-border pt-4 px-6 gap-3">
           {isViewMode ? (
             <Button variant="outline" onClick={onClose} className="border-border">
               Close

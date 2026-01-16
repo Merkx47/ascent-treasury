@@ -21,7 +21,16 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import { useFxRates } from "@/hooks/use-fx-rates";
 import {
   Settings as SettingsIcon,
   User,
@@ -34,10 +43,53 @@ import {
   Building2,
   Save,
   RefreshCw,
+  DollarSign,
+  TrendingUp,
 } from "lucide-react";
 
 export default function Settings() {
   const { toast } = useToast();
+  const { rates, updateRate } = useFxRates();
+  const [fxRateInputs, setFxRateInputs] = useState<Record<string, { buyRate: string; sellRate: string; cbnRate: string }>>({});
+
+  const handleFxRateChange = (currency: string, field: "buyRate" | "sellRate" | "cbnRate", value: string) => {
+    setFxRateInputs((prev) => ({
+      ...prev,
+      [currency]: {
+        ...prev[currency],
+        [field]: value,
+      },
+    }));
+  };
+
+  const saveFxRate = (currency: string) => {
+    const inputs = fxRateInputs[currency];
+    const currentRate = rates.find((r) => r.currency === currency);
+
+    const buyRate = inputs?.buyRate ? parseFloat(inputs.buyRate) : currentRate?.buyRate || 0;
+    const sellRate = inputs?.sellRate ? parseFloat(inputs.sellRate) : currentRate?.sellRate || 0;
+    const cbnRate = inputs?.cbnRate ? parseFloat(inputs.cbnRate) : currentRate?.cbnRate || 0;
+
+    if (buyRate > 0 && sellRate > 0) {
+      updateRate(currency, buyRate, sellRate, cbnRate);
+      toast({
+        title: "FX Rate Updated",
+        description: `${currency}/NGN rate has been updated successfully.`,
+      });
+      // Clear the input after saving
+      setFxRateInputs((prev) => ({
+        ...prev,
+        [currency]: { buyRate: "", sellRate: "", cbnRate: "" },
+      }));
+    } else {
+      toast({
+        title: "Invalid Rate",
+        description: "Please enter valid buy and sell rates.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const [notifications, setNotifications] = useState({
     emailAlerts: true,
     smsAlerts: false,
@@ -105,6 +157,10 @@ export default function Settings() {
           <TabsTrigger value="general" className="gap-2" data-testid="tab-general">
             <Globe className="w-4 h-4" />
             General
+          </TabsTrigger>
+          <TabsTrigger value="fx-rates" className="gap-2" data-testid="tab-fx-rates">
+            <DollarSign className="w-4 h-4" />
+            FX Rates
           </TabsTrigger>
           <TabsTrigger value="notifications" className="gap-2" data-testid="tab-notifications">
             <Bell className="w-4 h-4" />
@@ -211,6 +267,105 @@ export default function Settings() {
                   </SelectContent>
                 </Select>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="fx-rates" className="space-y-6">
+          <Card className="border-2 border-border">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Daily FX Rates Management
+              </CardTitle>
+              <CardDescription>
+                Set today's foreign exchange rates. These rates will be used throughout the application for conversions and displays.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-lg border-2 border-border overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50 border-b-2 border-border">
+                      <TableHead className="font-semibold border-r border-border">Currency</TableHead>
+                      <TableHead className="font-semibold border-r border-border">Buy Rate (₦)</TableHead>
+                      <TableHead className="font-semibold border-r border-border">Sell Rate (₦)</TableHead>
+                      <TableHead className="font-semibold border-r border-border">CBN Rate (₦)</TableHead>
+                      <TableHead className="font-semibold border-r border-border">Last Updated</TableHead>
+                      <TableHead className="font-semibold">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rates.map((rate) => (
+                      <TableRow key={rate.currency} className="border-b border-border">
+                        <TableCell className="font-medium border-r border-border">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                              <span className="text-xs font-bold text-primary">{rate.currency}</span>
+                            </div>
+                            {rate.currency}/NGN
+                          </div>
+                        </TableCell>
+                        <TableCell className="border-r border-border">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder={rate.buyRate.toFixed(2)}
+                            value={fxRateInputs[rate.currency]?.buyRate || ""}
+                            onChange={(e) => handleFxRateChange(rate.currency, "buyRate", e.target.value)}
+                            className="w-32 border-2"
+                          />
+                        </TableCell>
+                        <TableCell className="border-r border-border">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder={rate.sellRate.toFixed(2)}
+                            value={fxRateInputs[rate.currency]?.sellRate || ""}
+                            onChange={(e) => handleFxRateChange(rate.currency, "sellRate", e.target.value)}
+                            className="w-32 border-2"
+                          />
+                        </TableCell>
+                        <TableCell className="border-r border-border">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder={rate.cbnRate.toFixed(2)}
+                            value={fxRateInputs[rate.currency]?.cbnRate || ""}
+                            onChange={(e) => handleFxRateChange(rate.currency, "cbnRate", e.target.value)}
+                            className="w-32 border-2"
+                          />
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground border-r border-border">
+                          {rate.lastUpdated.toLocaleString("en-NG", {
+                            day: "2-digit",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            onClick={() => saveFxRate(rate.currency)}
+                            disabled={
+                              !fxRateInputs[rate.currency]?.buyRate &&
+                              !fxRateInputs[rate.currency]?.sellRate &&
+                              !fxRateInputs[rate.currency]?.cbnRate
+                            }
+                          >
+                            <Save className="w-4 h-4 mr-1" />
+                            Update
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <p className="text-sm text-muted-foreground mt-4">
+                Enter new rates in the fields above and click Update to save. Leave fields empty to keep current rates.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>

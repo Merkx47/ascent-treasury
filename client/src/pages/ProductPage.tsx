@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TransactionTable } from "@/components/TransactionTable";
 import { TransactionModal } from "@/components/TransactionModal";
-import { getTransactionsByProduct } from "@/lib/mockData";
+import { getTransactionsByProduct, mockCustomers } from "@/lib/mockData";
+import { useToast } from "@/hooks/use-toast";
+import { useCheckerQueue } from "@/contexts/CheckerQueueContext";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -66,16 +69,35 @@ const productColors: Record<string, string> = {
   DOMOUTAC: "bg-rose-500",
 };
 
+// Generate unique reference number
+const generateReferenceNumber = (productCode: string): string => {
+  const prefix = productCode.substring(0, 3).toUpperCase();
+  const timestamp = Date.now().toString().slice(-8);
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `${prefix}-${timestamp}-${random}`;
+};
+
 export default function ProductPage({ productCode }: ProductPageProps) {
+  const { toast } = useToast();
+  const { addToQueue } = useCheckerQueue();
+  const { user } = useAuth();
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [modalMode, setModalMode] = useState<"view" | "edit" | "create">("view");
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Mutable transactions state
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  // Initialize transactions from mock data
+  useEffect(() => {
+    const initialData = getTransactionsByProduct(productCode);
+    setTransactions(initialData);
+  }, [productCode]);
 
   const productInfo = productConfig[productCode];
   const Icon = productIcons[productCode] || FileText;
   const colorClass = productColors[productCode] || "bg-gray-500";
 
-  const transactions = getTransactionsByProduct(productCode);
   const activeTransactions = transactions.filter((tx) =>
     ["pending", "under_review", "approved"].includes(tx.status)
   );
@@ -102,8 +124,90 @@ export default function ProductPage({ productCode }: ProductPageProps) {
   };
 
   const handleDelete = (tx: Transaction) => {
-    console.log("Delete transaction:", tx.id);
+    setTransactions((prev) => prev.filter((t) => t.id !== tx.id));
     setIsModalOpen(false);
+    toast({
+      title: "Transaction Deleted",
+      description: `${tx.referenceNumber} has been deleted successfully.`,
+    });
+  };
+
+  const handleDuplicate = (tx: Transaction) => {
+    const duplicatedTx: Transaction = {
+      ...tx,
+      id: `tx-${Date.now()}`,
+      referenceNumber: generateReferenceNumber(productCode),
+      status: "draft",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setTransactions((prev) => [duplicatedTx, ...prev]);
+    toast({
+      title: "Transaction Duplicated",
+      description: `New draft created: ${duplicatedTx.referenceNumber}`,
+    });
+  };
+
+  const handleSave = (data: Partial<Transaction>) => {
+    if (modalMode === "create") {
+      // Create new transaction
+      const refNumber = generateReferenceNumber(productCode);
+      const newTx: Transaction = {
+        id: `tx-${Date.now()}`,
+        referenceNumber: refNumber,
+        productType: productCode,
+        customerId: data.customerId || "",
+        status: "pending",
+        amount: data.amount || "0",
+        currency: data.currency || "USD",
+        description: data.description || "",
+        priority: (data.priority as "low" | "normal" | "high" | "urgent") || "normal",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      setTransactions((prev) => [newTx, ...prev]);
+
+      // Add to checker queue
+      const customer = mockCustomers.find((c) => c.id === data.customerId);
+      addToQueue({
+        referenceNumber: refNumber,
+        entityType: productCode,
+        entityId: newTx.id,
+        customerName: customer?.name || "Unknown Customer",
+        amount: data.amount || "0",
+        currency: data.currency || "USD",
+        priority: (data.priority as "normal" | "high" | "urgent") || "normal",
+        makerName: user ? `${user.firstName} ${user.lastName}` : "Current User",
+        makerDepartment: "Trade Finance",
+        makerComments: data.description || "",
+      });
+
+      toast({
+        title: `${productInfo?.name || productCode} Created`,
+        description: `${refNumber} has been created and submitted for checker approval.`,
+      });
+    } else if (modalMode === "edit" && selectedTx) {
+      // Update existing transaction
+      setTransactions((prev) =>
+        prev.map((tx) =>
+          tx.id === selectedTx.id
+            ? { ...tx, ...data, updatedAt: new Date().toISOString() }
+            : tx
+        )
+      );
+      toast({
+        title: "Transaction Updated",
+        description: `${selectedTx.referenceNumber} has been updated successfully.`,
+      });
+    }
+    setIsModalOpen(false);
+  };
+
+  const handleDeleteFromModal = (id: string) => {
+    const txToDelete = transactions.find((tx) => tx.id === id);
+    if (txToDelete) {
+      handleDelete(txToDelete);
+    }
   };
 
   return (
@@ -187,6 +291,7 @@ export default function ProductPage({ productCode }: ProductPageProps) {
             onView={handleView}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onDuplicate={handleDuplicate}
             onCreate={handleCreate}
           />
         </TabsContent>
@@ -198,6 +303,7 @@ export default function ProductPage({ productCode }: ProductPageProps) {
             onView={handleView}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onDuplicate={handleDuplicate}
           />
         </TabsContent>
         <TabsContent value="all">
@@ -208,6 +314,7 @@ export default function ProductPage({ productCode }: ProductPageProps) {
             onView={handleView}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onDuplicate={handleDuplicate}
             onCreate={handleCreate}
           />
         </TabsContent>
@@ -217,8 +324,8 @@ export default function ProductPage({ productCode }: ProductPageProps) {
         transaction={selectedTx}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSave={(data) => console.log("Save:", data)}
-        onDelete={(id) => console.log("Delete:", id)}
+        onSave={handleSave}
+        onDelete={handleDeleteFromModal}
         mode={modalMode}
         productType={productCode}
       />

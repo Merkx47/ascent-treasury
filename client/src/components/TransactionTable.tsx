@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { CurrencyIcon, formatCurrencyAmount } from "./CurrencyIcon";
 import { StatusBadge } from "./StatusBadge";
+import { DateRangePicker } from "./DateRangePicker";
 import {
   Search,
   Filter,
@@ -34,7 +35,8 @@ import {
 } from "lucide-react";
 import type { Transaction } from "@shared/schema";
 import { mockCustomers } from "@/lib/mockData";
-import { format } from "date-fns";
+import { format, subDays, isWithinInterval, startOfDay, endOfDay } from "date-fns";
+import type { DateRange } from "react-day-picker";
 import { exportToExcel, formatTransactionForExport } from "@/lib/exportUtils";
 
 interface TransactionTableProps {
@@ -44,6 +46,7 @@ interface TransactionTableProps {
   onView?: (transaction: Transaction) => void;
   onEdit?: (transaction: Transaction) => void;
   onDelete?: (transaction: Transaction) => void;
+  onDuplicate?: (transaction: Transaction) => void;
   onCreate?: () => void;
 }
 
@@ -76,10 +79,15 @@ export function TransactionTable({
   onView,
   onEdit,
   onDelete,
+  onDuplicate,
   onCreate,
 }: TransactionTableProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 29),
+    to: new Date(),
+  });
   const [page, setPage] = useState(1);
   const [sortField, setSortField] = useState<string>("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -102,9 +110,21 @@ export function TransactionTable({
       result = result.filter((tx) => tx.status === statusFilter);
     }
 
+    // Apply date range filter
+    if (dateRange?.from && dateRange?.to) {
+      result = result.filter((tx) => {
+        if (!tx.createdAt) return false;
+        const txDate = new Date(tx.createdAt);
+        return isWithinInterval(txDate, {
+          start: startOfDay(dateRange.from!),
+          end: endOfDay(dateRange.to!),
+        });
+      });
+    }
+
     result.sort((a, b) => {
       let aVal: any, bVal: any;
-      
+
       switch (sortField) {
         case "amount":
           aVal = parseFloat(a.amount || "0");
@@ -126,7 +146,7 @@ export function TransactionTable({
     });
 
     return result;
-  }, [transactions, search, statusFilter, sortField, sortOrder]);
+  }, [transactions, search, statusFilter, dateRange, sortField, sortOrder]);
 
   const paginatedTransactions = useMemo(() => {
     const start = (page - 1) * pageSize;
@@ -166,9 +186,36 @@ export function TransactionTable({
     <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
       <Card className="border-2 border-border">
         <CardHeader className="pb-4 border-b-2 border-border">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <CardTitle className="text-lg font-semibold">{title}</CardTitle>
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  className="border-2"
+                  onClick={() => {
+                    const exportData = filteredTransactions.map((tx) =>
+                      formatTransactionForExport({
+                        ...tx,
+                        amount: parseFloat(tx.amount || "0"),
+                      })
+                    );
+                    exportToExcel(exportData, `${title.replace(/\s+/g, "_")}_Export`);
+                  }}
+                  data-testid="button-download-xlsx"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export
+                </Button>
+                {onCreate && (
+                  <Button onClick={onCreate} data-testid="button-create-new">
+                    <Plus className="w-4 h-4 mr-2" />
+                    New
+                  </Button>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -195,27 +242,10 @@ export function TransactionTable({
                   <SelectItem value="exception">Exception</SelectItem>
                 </SelectContent>
               </Select>
-              <Button 
-                variant="outline" 
-                className="border-2"
-                onClick={() => {
-                  const exportData = filteredTransactions.map(tx => formatTransactionForExport({
-                    ...tx,
-                    amount: parseFloat(tx.amount || "0"),
-                  }));
-                  exportToExcel(exportData, `${title.replace(/\s+/g, "_")}_Export`);
-                }}
-                data-testid="button-download-xlsx"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
-              {onCreate && (
-                <Button onClick={onCreate} data-testid="button-create-new">
-                  <Plus className="w-4 h-4 mr-2" />
-                  New
-                </Button>
-              )}
+              <DateRangePicker
+                dateRange={dateRange}
+                onDateRangeChange={setDateRange}
+              />
             </div>
           </div>
         </CardHeader>
@@ -339,7 +369,7 @@ export function TransactionTable({
                               <Edit className="w-4 h-4 mr-2" />
                               Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onDuplicate?.(tx)}>
                               <Copy className="w-4 h-4 mr-2" />
                               Duplicate
                             </DropdownMenuItem>

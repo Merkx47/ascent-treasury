@@ -1,6 +1,51 @@
-node_modules
-dist
-.DS_Store
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
 server/public
+
+# Vite
 vite.config.ts.*
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Claude Code files
+.claude/
+
+# PDF documents
+*.pdf
+
+# Archives
 *.tar.gz
+
+# Testing
+coverage/
+
+# Misc
+.cache/
+*.tmp
+
+# Local state
+.local/
+
+# Replit
+.replit
+replit.nix
